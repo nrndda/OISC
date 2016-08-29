@@ -53,6 +53,10 @@ always @* case (MIPSInstruction[31:26],MIPSInstruction[5:0])
 
   32'b0100??_?????_?????_?????_?????_??????: begin:COPz
                                                           OISCInstBase = `;       OISCInstType = ;                          OISCAdderCtrl = ;               COPz              = MIPSInstruction[27:26]; end
+  32'b1100??_?????_?????_?????_?????_??????: begin:LWCz
+                                                          OISCInstBase = `LOAD;   OISCInstType = ; OISCAdderCtrl   = ; COPz          = MIPSInstruction[27:26]; end
+  32'b1110??_?????_?????_?????_?????_??????: begin:SWCz
+                                                          OISCInstBase = `STOR;   OISCInstType = ; OISCAdderCtrl   = ; COPz          = MIPSInstruction[27:26]; end
 
 
   32'b000000_?????_?????_?????_00000_100100: begin:AND
@@ -140,33 +144,29 @@ always @* case (MIPSInstruction[31:26],MIPSInstruction[5:0])
 
 
   32'b100000_?????_?????_?????_?????_??????: begin:LB
-                                                          OISCInstBase = `LOAD;   OISCInstType = `MIPS_2R_TypeRAMAccess_Inst; OISCRAMAccessCtrl   = 5'b011_00; end//[1:0] - 2'b00-Byte,2'b01-HalfWord,2'b10-Word,2'b11-DoubleWord
+                                                          OISCInstBase = `LOAD;   OISCInstType = `MIPS_2R_TypeRAMRead_Inst;   OISCRAMAccessCtrl   = 5'b011_00; end//[1:0] - 2'b00-Byte,2'b01-HalfWord,2'b10-Word,2'b11-DoubleWord
   32'b100100_?????_?????_?????_?????_??????: begin:LBU
-                                                          OISCInstBase = `LOAD;   OISCInstType = `MIPS_2R_TypeRAMAccess_Inst; OISCRAMAccessCtrl   = 5'b010_00; end//[2] - Signed
+                                                          OISCInstBase = `LOAD;   OISCInstType = `MIPS_2R_TypeRAMRead_Inst;   OISCRAMAccessCtrl   = 5'b010_00; end//[2] - Signed (Sign-extend)
   32'b100001_?????_?????_?????_?????_??????: begin:LH
-                                                          OISCInstBase = `LOAD;   OISCInstType = `MIPS_2R_TypeRAMAccess_Inst; OISCRAMAccessCtrl   = 5'b011_01; end//[3] - Alligned
+                                                          OISCInstBase = `LOAD;   OISCInstType = `MIPS_2R_TypeRAMRead_Inst;   OISCRAMAccessCtrl   = 5'b011_01; end//[3] - Alligned
   32'b100101_?????_?????_?????_?????_??????: begin:LHU
-                                                          OISCInstBase = `LOAD;   OISCInstType = `MIPS_2R_TypeRAMAccess_Inst; OISCRAMAccessCtrl   = 5'b010_01; end//[4] - Place on the left (Most_segn_part) of the reg
+                                                          OISCInstBase = `LOAD;   OISCInstType = `MIPS_2R_TypeRAMRead_Inst;   OISCRAMAccessCtrl   = 5'b010_01; end//[4] - Place on the left (Most_sign_part) of the reg
   32'b100011_?????_?????_?????_?????_??????: begin:LW
-                                                          OISCInstBase = `LOAD;   OISCInstType = `MIPS_2R_TypeRAMAccess_Inst; OISCRAMAccessCtrl   = 5'b010_01; end
+                                                          OISCInstBase = `LOAD;   OISCInstType = `MIPS_2R_TypeRAMRead_Inst;   OISCRAMAccessCtrl   = 5'b010_10; end
   32'b100010_?????_?????_?????_?????_??????: begin:LWL
-                                                          OISCInstBase = `LOAD;   OISCInstType = `MIPS_2R_TypeRAMAccess_Inst; OISCRAMAccessCtrl   = 5'b101_01; end
+                                                          OISCInstBase = `LOAD;   OISCInstType = `MIPS_2R_TypeRAMRead_Inst;   OISCRAMAccessCtrl   = 5'b101_10; end
   32'b100110_?????_?????_?????_?????_??????: begin:LWR
-                                                          OISCInstBase = `LOAD;   OISCInstType = `MIPS_2R_TypeRAMAccess_Inst; OISCRAMAccessCtrl   = 5'b001_01; end
-  32'b1100??_?????_?????_?????_?????_??????: begin:LWCz
-                                                          OISCInstBase = `LOAD;   OISCInstType = ; OISCAdderCtrl   = ; COPz          = MIPSInstruction[27:26]; end
+                                                          OISCInstBase = `LOAD;   OISCInstType = `MIPS_2R_TypeRAMRead_Inst;   OISCRAMAccessCtrl   = 5'b001_10; end
   32'b101000_?????_?????_?????_?????_??????: begin:SB
-                                                          OISCInstBase = `STOR;   OISCInstType = `; OISCRAMAccessCtrl   = ; end
+                                                          OISCInstBase = `STOR;   OISCInstType = `MIPS_2R_TypeRAMWrite_Inst; OISCRAMAccessCtrl   = 5'b011_00; end
   32'b101001_?????_?????_?????_?????_??????: begin:SH
-                                                          OISCInstBase = `STOR;   OISCInstType = `; OISCRAMAccessCtrl   = ; end
+                                                          OISCInstBase = `STOR;   OISCInstType = `MIPS_2R_TypeRAMWrite_Inst; OISCRAMAccessCtrl   = 5'b011_01; end
   32'b101011_?????_?????_?????_?????_??????: begin:SW
-                                                          OISCInstBase = `STOR;   OISCInstType = `; OISCRAMAccessCtrl   = ; end
+                                                          OISCInstBase = `STOR;   OISCInstType = `MIPS_2R_TypeRAMWrite_Inst; OISCRAMAccessCtrl   = 5'b011_10; end
   32'b101010_?????_?????_?????_?????_??????: begin:SWL
-                                                          OISCInstBase = `STOR;   OISCInstType = `; OISCRAMAccessCtrl   = ; end
+                                                          OISCInstBase = `STOR;   OISCInstType = `MIPS_2R_TypeRAMWrite_Inst; OISCRAMAccessCtrl   = 5'b101_10; end
   32'b101110_?????_?????_?????_?????_??????: begin:SWR
-                                                          OISCInstBase = `STOR;   OISCInstType = `; OISCRAMAccessCtrl   = ; end
-  32'b1110??_?????_?????_?????_?????_??????: begin:SWCz
-                                                          OISCInstBase = `STOR;   OISCInstType = ; OISCAdderCtrl   = ; COPz          = MIPSInstruction[27:26]; end
+                                                          OISCInstBase = `STOR;   OISCInstType = `MIPS_2R_TypeRAMWrite_Inst; OISCRAMAccessCtrl   = 5'b001_10; end
 
 
   32'b000100_?????_?????_?????_?????_??????: begin:BEQ
@@ -209,7 +209,6 @@ wire []MIPSShiftAmount    = MIPSInstruction[10:6];
 wire []OISCSourceReg      = `GPRAddrStart+MIPSSourceReg;
 wire []OISCTempReg        = `GPRAddrStart+MIPSTempReg;
 wire []OISCDestinationReg = `GPRAddrStart+MIPSDestinationReg;
-wire []OISCImm            = `IMM;
 
 wire []OISCInstPointer    = OISCInstBase+OISCInstCounter
 wire []OISCInstStep       = OISCInstType+OISCInstCounter;
@@ -229,18 +228,23 @@ always @* case (OISCInstStep)
   //MFHI,MFLO,MTHI,MTLO
   `MIPS_1R_TypeMove_Inst        :    OISCInstruction = {   OISCSourceAddr   ,   OISCDestinationAddr   };
   //
-  `MIPS_2R_TypeRAMAccess_Inst   :    OISCInstruction = {   MIPSSourceReg    ,   `OISCMMUBase          };
-  `MIPS_2R_TypeRAMAccess_Inst +1:    OISCInstruction = {   MIPS16Imm        ,   `OISCMMUOffset        };
-  `MIPS_2R_TypeRAMAccess_Inst +2:    OISCInstruction = {   OISCRAMAccessCtrl,   `OISCMMUAccessCtrl    };
-  `MIPS_2R_TypeRAMAccess_Inst +3:    OISCInstruction = {   `OISCMMUReadData ,   OISCTempReg           };
+  `MIPS_2R_TypeRAMRead_Inst     :    OISCInstruction = {   MIPSSourceReg    ,   `OISC_MMUBase         };
+  `MIPS_2R_TypeRAMRead_Inst   +1:    OISCInstruction = {   MIPS16Imm        ,   `OISC_MMUOffset       };
+  `MIPS_2R_TypeRAMRead_Inst   +2:    OISCInstruction = {   OISCRAMAccessCtrl,   `OISC_MMUAccessCtrl   };
+  `MIPS_2R_TypeRAMRead_Inst   +3:    OISCInstruction = {   `OISC_MMUReadData ,   OISCTempReg          };
+  //
+  `MIPS_2R_TypeRAMWrite_Inst    :    OISCInstruction = {   MIPSSourceReg    ,   `OISC_MMUBase         };
+  `MIPS_2R_TypeRAMWrite_Inst  +1:    OISCInstruction = {   MIPS16Imm        ,   `OISC_MMUOffset       };
+  `MIPS_2R_TypeRAMWrite_Inst  +3:    OISCInstruction = {   OISCTempReg      ,   `OISC_MMUWriteData    };
+  `MIPS_2R_TypeRAMWrite_Inst  +2:    OISCInstruction = {   OISCRAMAccessCtrl,   `OISC_MMUAccessCtrl   };
   //AND,OR,XOR,NOR
   `MIPS_3R_TypeSimple_Inst      :    OISCInstruction = {   OISCSourceReg    ,   OISCAccumulator       };
   `MIPS_3R_TypeSimple_Inst    +1:    OISCInstruction = {   OISCTempReg      ,   OISCSecondOperand     };
   `MIPS_3R_TypeSimple_Inst    +2:    OISCInstruction = {   OISCAccumulator  ,   OISCDestinationReg    };
   //ANDI,ORI,XORI
   `MIPS_2I_TypeSimple_Inst      :    OISCInstruction = {   OISCSourceReg    ,   OISCAccumulator       };
-  `MIPS_2I_TypeSimple_Inst    +1:    OISCInstruction = {   MIPS16Imm        ,   OISCImm               };//Make immediate
-  `MIPS_2I_TypeSimple_Inst    +2:    OISCInstruction = {   OISCImm          ,   OISCSecondOperand     };
+  `MIPS_2I_TypeSimple_Inst    +1:    OISCInstruction = {   MIPS16Imm        ,   `OISC_IMM             };//Make immediate
+  `MIPS_2I_TypeSimple_Inst    +2:    OISCInstruction = {   `OISC_IMM        ,   OISCSecondOperand     };
   `MIPS_2I_TypeSimple_Inst    +3:    OISCInstruction = {   OISCAccumulator  ,   OISCTempReg           };
   //ADD,ADDU,AND,SLLV,SRAV,SRLV
   `MIPS_3R_TypeWithCtrl_Inst    :    OISCInstruction = {   OISCSourceReg    ,   OISCAccumulator       };
@@ -249,8 +253,8 @@ always @* case (OISCInstStep)
   `MIPS_3R_TypeWithCtrl_Inst  +3:    OISCInstruction = {   OISCAccumulator  ,   OISCDestinationReg    };
   //ADDI,ADDIU,ANDI,SLL,SRA,SRL
   `MIPS_2I_TypeWithCtrl_Inst    :    OISCInstruction = {   OISCSourceReg    ,   OISCAccumulator       };
-  `MIPS_2I_TypeWithCtrl_Inst  +1:    OISCInstruction = {   MIPS16Imm        ,   OISCImm               };//Make immediate
-  `MIPS_2I_TypeWithCtrl_Inst  +2:    OISCInstruction = {   OISCImm          ,   OISCSecondOperand     };
+  `MIPS_2I_TypeWithCtrl_Inst  +1:    OISCInstruction = {   MIPS16Imm        ,   `OISC_IMM             };//Make immediate
+  `MIPS_2I_TypeWithCtrl_Inst  +2:    OISCInstruction = {   `OISC_IMM        ,   OISCSecondOperand     };
   `MIPS_2I_TypeWithCtrl_Inst  +3:    OISCInstruction = {   OISCUnitCtrl     ,   OISCCtrlOperand       };
   `MIPS_2I_TypeWithCtrl_Inst  +4:    OISCInstruction = {   OISCAccumulator  ,   OISCTempReg           };
 endcase

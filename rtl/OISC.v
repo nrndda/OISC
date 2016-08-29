@@ -27,6 +27,7 @@ reg [`PCRegWidth-1:0] PC;
 reg [`GeneralPurposeRegWidth-1:0] GPR [`GeneralPurposeRegNum-1:0];
 assign GPR[0] = 0;
 reg [`HiLoRegsWidth-1:0] HI,LO;
+reg [`OISC_ImmRegWidth-1:0] Imm;
 
 
 reg [`InstructionWidth/2-1:0] MoveSrc,MoveDst;
@@ -46,8 +47,9 @@ end
 
 always @* begin
   case (MoveDst)
-  `BootCode,`PC: PC <= MoveSrc;
-  `GPR0:
+  `OISC_BootCode,`OISC_PC   : PC  <= MoveSrc;
+  `OISC_IMM                 : Imm <= MoveSrc;//TODO Sign-extend
+  `OISC_GPRRegExp           : GPR[MoveDst[4:0]] <= /*TODO I've need te read it first*/;
 end
 
 always @(posedge RST or posedge CLK) begin
