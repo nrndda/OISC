@@ -80,11 +80,11 @@ always @* case (MIPSInstruction[31:26],MIPSInstruction[5:0])
   32'b001010_?????_?????_?????_?????_??????: begin:SLTI
                                                           OISCInstBase = `SLT;    OISCInstType = `MIPS_2I_TypeSimple_Inst;                                                                              end
   32'b001011_?????_?????_?????_?????_??????: begin:SLTIU
-                                                          OISCInstBase = `SLT;    OISCInstType = `MIPS_2I_TypeSimple_Inst;                                                                              end
+                                                          OISCInstBase = `SLTU;   OISCInstType = `MIPS_2I_TypeSimple_Inst;                                                                              end
   32'b000000_?????_?????_?????_00000_101011: begin:SLTU
-                                                          OISCInstBase = `SLT;    OISCInstType = `MIPS_2I_TypeSimple_Inst;                                                                              end
+                                                          OISCInstBase = `SLTU;   OISCInstType = `MIPS_2I_TypeSimple_Inst;                                                                              end
 
-
+/*NOTE Shift amount for MIPS is 5bit*/
   32'b000000_00000_?????_?????_?????_000000: begin:SLL
                                                           OISCInstBase = `SHIFT;  OISCInstType = `MIPS_2I_TypeWithCtrl_Inst; OISCCtrlType = `ShiftCtrl;      OISCSHIFTType         = 2'b10;             end//[0] - Arithmetic shift
   32'b000000_00000_?????_?????_?????_000010: begin:SRL
@@ -100,9 +100,9 @@ always @* case (MIPSInstruction[31:26],MIPSInstruction[5:0])
 
 
   32'b000000_?????_?????_?????_00000_100000: begin:ADD
-                                                          OISCInstBase = `ADD;    OISCInstType = `MIPS_3R_TypeWithOV_Inst;   OISCCtrlType = `AdderCtrl;      OISCAdderCtrl         = 2'b01;             end
+                                                          OISCInstBase = `ADD;    OISCInstType = `MIPS_3R_TypeWithOV_Inst;   OISCCtrlType = `AdderCtrl;      OISCAdderCtrl         = 2'b01;             end//[0] - OverFlow control
   32'b000000_?????_?????_?????_00000_100001: begin:ADDU
-                                                          OISCInstBase = `ADD;    OISCInstType = `MIPS_3R_TypeWithOV_Inst;   OISCCtrlType = `AdderCtrl;      OISCAdderCtrl         = 2'b00;             end
+                                                          OISCInstBase = `ADD;    OISCInstType = `MIPS_3R_TypeWithOV_Inst;   OISCCtrlType = `AdderCtrl;      OISCAdderCtrl         = 2'b00;             end//[1] - Subtrac, convert second operand to 2's complement
   32'b001000_?????_?????_?????_?????_??????: begin:ADDI
                                                           OISCInstBase = `ADD;    OISCInstType = `MIPS_2I_TypeWithCtrl_Inst; OISCCtrlType = `AdderCtrl;      OISCAdderCtrl         = 2'b01;             end
   32'b001001_?????_?????_?????_?????_??????: begin:ADDIU
@@ -116,25 +116,25 @@ always @* case (MIPSInstruction[31:26],MIPSInstruction[5:0])
   32'b000000_?????_?????_00000_00000_011001: begin:MULTU
                                                           OISCInstBase = `MULT;   OISCInstType = `MIPS_2R_TypeInstHiLo;      OISCCtrlType = `MultiplierCtrl; OISCMultiplierCtrl    = 0;                 end
   32'b000000_?????_?????_?????_00000_100010: begin:SUB
-                                                          OISCInstBase = `ADD;    OISCInstType = `MIPS_3R_TypeWithOV_Inst;   OISCCtrlType = `AdderCtrl;      OISCAdderCtrl         = 2'b11;             end//[0] - OverFlow control
+                                                          OISCInstBase = `ADD;    OISCInstType = `MIPS_3R_TypeWithOV_Inst;   OISCCtrlType = `AdderCtrl;      OISCAdderCtrl         = 2'b11;             end
   32'b000000_?????_?????_?????_00000_100011: begin:SUBU
-                                                          OISCInstBase = `ADD;    OISCInstType = `MIPS_3R_TypeWithOV_Inst;   OISCCtrlType = `AdderCtrl;      OISCAdderCtrl         = 2'b10;             end//[1] - Subtrac, convert second operand to 2's complement
+                                                          OISCInstBase = `ADD;    OISCInstType = `MIPS_3R_TypeWithOV_Inst;   OISCCtrlType = `AdderCtrl;      OISCAdderCtrl         = 2'b10;             end
 
 
   32'b001111_00000_?????_?????_?????_??????: begin:LUI
-                                                          OISCInstBase = `LUI;    OISCInstType = ; OISCAdderCtrl   = ; end
+                                                          OISCInstBase = `LUI;    OISCInstType = `MIPS_1R_TypeLUI_Inst;                                       end
   32'b000000_00000_00000_?????_00000_010000: begin:MFHI
-                                                          OISCInstBase = `MOVE;   OISCInstType = `MIPS_1R_TypeMove_Inst;     OISCSourceAddr = `HI;           OISCDestinationAddr = OISCDestinationReg;  end
+                                                          OISCInstBase = `MOVE;   OISCInstType = `MIPS_1R_TypeMove_Inst;     OISCSourceAddr = `Hi;           OISCDestinationAddr = OISCDestinationReg;  end
   32'b000000_00000_00000_?????_00000_010010: begin:MFLO
-                                                          OISCInstBase = `MOVE;   OISCInstType = `MIPS_1R_TypeMove_Inst;     OISCSourceAddr = `LO;           OISCDestinationAddr = OISCDestinationReg;  end
+                                                          OISCInstBase = `MOVE;   OISCInstType = `MIPS_1R_TypeMove_Inst;     OISCSourceAddr = `Li;           OISCDestinationAddr = OISCDestinationReg;  end
   32'b000000_?????_00000_00000_00000_010001: begin:MTHI
-                                                          OISCInstBase = `MOVE;   OISCInstType = `MIPS_1R_TypeMove_Inst;     OISCSourceAddr = OISCSourceReg; OISCDestinationAddr = `HI;                 end
+                                                          OISCInstBase = `MOVE;   OISCInstType = `MIPS_1R_TypeMove_Inst;     OISCSourceAddr = OISCSourceReg; OISCDestinationAddr = `Hi;                 end
   32'b000000_?????_00000_00000_00000_010011: begin:MTLO
-                                                          OISCInstBase = `MOVE;   OISCInstType = `MIPS_1R_TypeMove_Inst;     OISCSourceAddr = OISCSourceReg; OISCDestinationAddr = `LO;                 end
+                                                          OISCInstBase = `MOVE;   OISCInstType = `MIPS_1R_TypeMove_Inst;     OISCSourceAddr = OISCSourceReg; OISCDestinationAddr = `Li;                 end
 
 
   32'b000010_?????_?????_?????_?????_??????: begin:J
-                                                          OISCInstBase = `JUMP;   OISCInstType = ; OISCAdderCtrl   = ; end
+                                                          OISCInstBase = `JUMP;   OISCInstType = ; OISCAdderCtrl   = ; end//TODO PC reg must be here, so decodicg jump instructions also must be here
   32'b000011_?????_?????_?????_?????_??????: begin:JAL
                                                           OISCInstBase = `JUMP;   OISCInstType = ; OISCAdderCtrl   = ; end
   32'b000000_?????_00000_00000_00000_001000: begin:JR
@@ -158,15 +158,15 @@ always @* case (MIPSInstruction[31:26],MIPSInstruction[5:0])
   32'b100110_?????_?????_?????_?????_??????: begin:LWR
                                                           OISCInstBase = `LOAD;   OISCInstType = `MIPS_2R_TypeRAMRead_Inst;   OISCRAMAccessCtrl   = 5'b001_10; end
   32'b101000_?????_?????_?????_?????_??????: begin:SB
-                                                          OISCInstBase = `STOR;   OISCInstType = `MIPS_2R_TypeRAMWrite_Inst; OISCRAMAccessCtrl   = 5'b011_00; end
+                                                          OISCInstBase = `STOR;   OISCInstType = `MIPS_2R_TypeRAMWrite_Inst;  OISCRAMAccessCtrl   = 5'b011_00; end
   32'b101001_?????_?????_?????_?????_??????: begin:SH
-                                                          OISCInstBase = `STOR;   OISCInstType = `MIPS_2R_TypeRAMWrite_Inst; OISCRAMAccessCtrl   = 5'b011_01; end
+                                                          OISCInstBase = `STOR;   OISCInstType = `MIPS_2R_TypeRAMWrite_Inst;  OISCRAMAccessCtrl   = 5'b011_01; end
   32'b101011_?????_?????_?????_?????_??????: begin:SW
-                                                          OISCInstBase = `STOR;   OISCInstType = `MIPS_2R_TypeRAMWrite_Inst; OISCRAMAccessCtrl   = 5'b011_10; end
+                                                          OISCInstBase = `STOR;   OISCInstType = `MIPS_2R_TypeRAMWrite_Inst;  OISCRAMAccessCtrl   = 5'b011_10; end
   32'b101010_?????_?????_?????_?????_??????: begin:SWL
-                                                          OISCInstBase = `STOR;   OISCInstType = `MIPS_2R_TypeRAMWrite_Inst; OISCRAMAccessCtrl   = 5'b101_10; end
+                                                          OISCInstBase = `STOR;   OISCInstType = `MIPS_2R_TypeRAMWrite_Inst;  OISCRAMAccessCtrl   = 5'b101_10; end
   32'b101110_?????_?????_?????_?????_??????: begin:SWR
-                                                          OISCInstBase = `STOR;   OISCInstType = `MIPS_2R_TypeRAMWrite_Inst; OISCRAMAccessCtrl   = 5'b001_10; end
+                                                          OISCInstBase = `STOR;   OISCInstType = `MIPS_2R_TypeRAMWrite_Inst;  OISCRAMAccessCtrl   = 5'b001_10; end
 
 
   32'b000100_?????_?????_?????_?????_??????: begin:BEQ
@@ -204,6 +204,7 @@ wire []MIPSSourceReg      = MIPSInstruction[25:21];
 wire []MIPSTempReg        = MIPSInstruction[20:16];
 wire []MIPSDestinationReg = MIPSInstruction[15:11];
 wire []MIPS16Imm          = MIPSInstruction[15:0];
+wire []MIPS26Imm          = MIPSInstruction[25:0];
 wire []MIPSShiftAmount    = MIPSInstruction[10:6];
 
 wire []OISCSourceReg      = `GPRAddrStart+MIPSSourceReg;
@@ -215,48 +216,59 @@ wire []OISCInstStep       = OISCInstType+OISCInstCounter;
 wire []OISCAccumulator    = OISCInstBase;
 wire []OISCSecondOperand  = OISCInstBase+1;
 wire []OISCCtrlOperand    = OISCInstBase+2;
-wire []OISCUnitCtrl;
+wire []OISCResult         = OISCInstBase+3;
+wire []OISCResultHi       = OISCInstBase+4;
 
 always @* case (OISCCtrlType)
   `AdderCtrl      : OISCUnitCtrl = OISCAdderCtrl;
   `ShiftCtrl      : OISCUnitCtrl = OISCShiftType;
   `DividerCtrl    : OISCUnitCtrl = OISCDividerCtrl;
-  `MultiplierCtrl : OISCUnitCtrl = OISCDividerCtrl;
+  `MultiplierCtrl : OISCUnitCtrl = OISCMultiplierCtrl;
 endcase
 
 always @* case (OISCInstStep)
+  //LUI
+  `MIPS_1R_TypeLUI_Inst         :    OISCInstruction = {    MIPS16Imm          ,   `OISC_IMM              };
+  `MIPS_1R_TypeLUI_Inst       +1:    OISCInstruction = {   `OISC_IMM           ,   `OISC_MUHFOp           };
+  `MIPS_1R_TypeLUI_Inst       +2:    OISCInstruction = {   `OISC_MUHRes        ,    OISCTempReg           };
   //MFHI,MFLO,MTHI,MTLO
-  `MIPS_1R_TypeMove_Inst        :    OISCInstruction = {   OISCSourceAddr   ,   OISCDestinationAddr   };
+  `MIPS_1R_TypeMove_Inst        :    OISCInstruction = {    OISCSourceAddr     ,    OISCDestinationAddr   };
   //
-  `MIPS_2R_TypeRAMRead_Inst     :    OISCInstruction = {   MIPSSourceReg    ,   `OISC_MMUBase         };
-  `MIPS_2R_TypeRAMRead_Inst   +1:    OISCInstruction = {   MIPS16Imm        ,   `OISC_MMUOffset       };
-  `MIPS_2R_TypeRAMRead_Inst   +2:    OISCInstruction = {   OISCRAMAccessCtrl,   `OISC_MMUAccessCtrl   };
-  `MIPS_2R_TypeRAMRead_Inst   +3:    OISCInstruction = {   `OISC_MMUReadData ,   OISCTempReg          };
+  `MIPS_2R_TypeRAMRead_Inst     :    OISCInstruction = {    MIPSSourceReg      ,   `OISC_MMUBase          };
+  `MIPS_2R_TypeRAMRead_Inst   +1:    OISCInstruction = {    MIPS16Imm          ,   `OISC_MMUOffset        };
+  `MIPS_2R_TypeRAMRead_Inst   +2:    OISCInstruction = {    OISCRAMAccessCtrl  ,   `OISC_MMUAccessCtrl    };
+  `MIPS_2R_TypeRAMRead_Inst   +3:    OISCInstruction = {   `OISC_MMUReadData   ,    OISCTempReg           };
   //
-  `MIPS_2R_TypeRAMWrite_Inst    :    OISCInstruction = {   MIPSSourceReg    ,   `OISC_MMUBase         };
-  `MIPS_2R_TypeRAMWrite_Inst  +1:    OISCInstruction = {   MIPS16Imm        ,   `OISC_MMUOffset       };
-  `MIPS_2R_TypeRAMWrite_Inst  +3:    OISCInstruction = {   OISCTempReg      ,   `OISC_MMUWriteData    };
-  `MIPS_2R_TypeRAMWrite_Inst  +2:    OISCInstruction = {   OISCRAMAccessCtrl,   `OISC_MMUAccessCtrl   };
+  `MIPS_2R_TypeRAMWrite_Inst    :    OISCInstruction = {    MIPSSourceReg      ,   `OISC_MMUBase          };
+  `MIPS_2R_TypeRAMWrite_Inst  +1:    OISCInstruction = {    MIPS16Imm          ,   `OISC_MMUOffset        };
+  `MIPS_2R_TypeRAMWrite_Inst  +3:    OISCInstruction = {    OISCTempReg        ,   `OISC_MMUWriteData     };
+  `MIPS_2R_TypeRAMWrite_Inst  +2:    OISCInstruction = {    OISCRAMAccessCtrl  ,   `OISC_MMUAccessCtrl    };
   //AND,OR,XOR,NOR
-  `MIPS_3R_TypeSimple_Inst      :    OISCInstruction = {   OISCSourceReg    ,   OISCAccumulator       };
-  `MIPS_3R_TypeSimple_Inst    +1:    OISCInstruction = {   OISCTempReg      ,   OISCSecondOperand     };
-  `MIPS_3R_TypeSimple_Inst    +2:    OISCInstruction = {   OISCAccumulator  ,   OISCDestinationReg    };
+  `MIPS_3R_TypeSimple_Inst      :    OISCInstruction = {    OISCSourceReg      ,    OISCAccumulator       };
+  `MIPS_3R_TypeSimple_Inst    +1:    OISCInstruction = {    OISCTempReg        ,    OISCSecondOperand     };
+  `MIPS_3R_TypeSimple_Inst    +2:    OISCInstruction = {    OISCResult         ,    OISCDestinationReg    };
   //ANDI,ORI,XORI
-  `MIPS_2I_TypeSimple_Inst      :    OISCInstruction = {   OISCSourceReg    ,   OISCAccumulator       };
-  `MIPS_2I_TypeSimple_Inst    +1:    OISCInstruction = {   MIPS16Imm        ,   `OISC_IMM             };//Make immediate
-  `MIPS_2I_TypeSimple_Inst    +2:    OISCInstruction = {   `OISC_IMM        ,   OISCSecondOperand     };
-  `MIPS_2I_TypeSimple_Inst    +3:    OISCInstruction = {   OISCAccumulator  ,   OISCTempReg           };
+  `MIPS_2I_TypeSimple_Inst      :    OISCInstruction = {    OISCSourceReg      ,    OISCAccumulator       };
+  `MIPS_2I_TypeSimple_Inst    +1:    OISCInstruction = {    MIPS16Imm          ,   `OISC_IMM              };//Make immediate
+  `MIPS_2I_TypeSimple_Inst    +2:    OISCInstruction = {   `OISC_IMM           ,    OISCSecondOperand     };
+  `MIPS_2I_TypeSimple_Inst    +3:    OISCInstruction = {    OISCResult         ,    OISCTempReg           };
   //ADD,ADDU,AND,SLLV,SRAV,SRLV
-  `MIPS_3R_TypeWithCtrl_Inst    :    OISCInstruction = {   OISCSourceReg    ,   OISCAccumulator       };
-  `MIPS_3R_TypeWithCtrl_Inst  +1:    OISCInstruction = {   OISCTempReg      ,   OISCSecondOperand     };
-  `MIPS_3R_TypeWithCtrl_Inst  +2:    OISCInstruction = {   OISCUnitCtrl     ,   OISCCtrlOperand       };
-  `MIPS_3R_TypeWithCtrl_Inst  +3:    OISCInstruction = {   OISCAccumulator  ,   OISCDestinationReg    };
+  `MIPS_3R_TypeWithCtrl_Inst    :    OISCInstruction = {    OISCSourceReg      ,    OISCAccumulator       };
+  `MIPS_3R_TypeWithCtrl_Inst  +1:    OISCInstruction = {    OISCTempReg        ,    OISCSecondOperand     };
+  `MIPS_3R_TypeWithCtrl_Inst  +2:    OISCInstruction = {    OISCUnitCtrl       ,    OISCCtrlOperand       };
+  `MIPS_3R_TypeWithCtrl_Inst  +3:    OISCInstruction = {    OISCResult         ,    OISCDestinationReg    };
   //ADDI,ADDIU,ANDI,SLL,SRA,SRL
-  `MIPS_2I_TypeWithCtrl_Inst    :    OISCInstruction = {   OISCSourceReg    ,   OISCAccumulator       };
-  `MIPS_2I_TypeWithCtrl_Inst  +1:    OISCInstruction = {   MIPS16Imm        ,   `OISC_IMM             };//Make immediate
-  `MIPS_2I_TypeWithCtrl_Inst  +2:    OISCInstruction = {   `OISC_IMM        ,   OISCSecondOperand     };
-  `MIPS_2I_TypeWithCtrl_Inst  +3:    OISCInstruction = {   OISCUnitCtrl     ,   OISCCtrlOperand       };
-  `MIPS_2I_TypeWithCtrl_Inst  +4:    OISCInstruction = {   OISCAccumulator  ,   OISCTempReg           };
+  `MIPS_2I_TypeWithCtrl_Inst    :    OISCInstruction = {    OISCSourceReg      ,    OISCAccumulator       };
+  `MIPS_2I_TypeWithCtrl_Inst  +1:    OISCInstruction = {    MIPS16Imm          ,   `OISC_IMM              };//Make immediate
+  `MIPS_2I_TypeWithCtrl_Inst  +2:    OISCInstruction = {   `OISC_IMM           ,    OISCSecondOperand     };
+  `MIPS_2I_TypeWithCtrl_Inst  +3:    OISCInstruction = {    OISCUnitCtrl       ,    OISCCtrlOperand       };
+  `MIPS_2I_TypeWithCtrl_Inst  +4:    OISCInstruction = {    OISCResult         ,    OISCTempReg           };
+  //MULT,MULTU,DIV,DIVU
+  `MIPS_2R_TypeInstHiLo         :    OISCInstruction = {    OISCSourceReg      ,    OISCAccumulator       };
+  `MIPS_2R_TypeInstHiLo       +1:    OISCInstruction = {    OISCTempReg        ,    OISCSecondOperand     };
+  `MIPS_2R_TypeInstHiLo       +2:    OISCInstruction = {    OISCUnitCtrl       ,    OISCCtrlOperand       };
+  `MIPS_2R_TypeInstHiLo       +3:    OISCInstruction = {    OISCResult         ,   `Lo                    };
+  `MIPS_2R_TypeInstHiLo       +4:    OISCInstruction = {    OISCResultHi       ,   `Hi                    };
 endcase
 
 always @(posedge CLK or posedge RST) begin
