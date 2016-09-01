@@ -2,4 +2,4 @@ One Instruction Set Computer with MOVE command
 
 See https://en.wikipedia.org/wiki/One_instruction_set_computer and https://en.wikipedia.org/wiki/Transport_triggered_architecture
 
-I don't have knowledge and time for toolchain and linux kernl so I decided to take MIPS ISA and make translator.
+I don't have knowledge and time for toolchain and linux kernel so I decided to take MIPS ISA and make translator.

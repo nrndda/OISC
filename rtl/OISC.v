@@ -12,24 +12,25 @@ module OISC (
   input                               InstructionReadValid,
   input      [`InstructionWidth-1:0]  InstructionReadData,
 
-  output reg                          SDRAMReadReady,
-  input                               SDRAMReadValid,
-  input      [`SRAMDataWidth-1:0]     SDRAMReadData,
-  output reg [`SRAMAddrWidth-1:0]     SDRAMReadAddr,
+  output reg                          MMUAccessValid,
+  input                               MMUAccessReady,
+  output reg [`GPRWidth-1:0]          MMUBase,
+  output reg [`GPRWidth-1:0]          MMUOffset,
+  output reg [`GPRWidth-1:0]          MMUWriteData,
+  output reg                          MMUAccessCtrl,
 
-  input                               SDRAMWriteReady,
-  output reg                          SDRAMWriteValid,
-  output reg [`SRAMDataWidth-1:0]     SDRAMWriteData,
-  output reg [`SRAMAddrWidth-1:0]     SDRAMWriteAddr
+  input                               MMUReadValid,
+  output reg                          MMUReadReady,
+  input      [`GPRWidth-1:0]          MMUReadData
 );
 
 reg [`PCRegWidth-1:0] PC;
-reg [`GeneralPurposeRegWidth-1:0] GPR [`GeneralPurposeRegNum-1:0];
+reg [`GPRWidth-1:0] GPR [`GPRNum-1:0];
 assign GPR[0] = 0;
 reg [`HiLoRegsWidth-1:0] Hi,Lo;
 reg [`OISC_ImmRegWidth-1:0] Imm;
 
-wire [`GeneralPurposeRegWidth-1:0] MoveComm;
+wire [`GPRWidth-1:0] MoveComm;
 
 
 reg [`InstructionWidth/2-1:0] MoveSrc,MoveDst;
@@ -53,7 +54,16 @@ always @* begin
   `OISC_RAM                 : MoveComm              = MoveSrc;
   `OISC_GPRRegExp           : MoveComm              = GPR[MoveDst[4:0]];
 
+  `OISC_Hi                  : MoveComm              = Hi;
+  `OISC_Lo                  : MoveComm              = Lo;
+
   `OISC_Imm                 : MoveComm              = Imm;
+
+  `OISC_MMUBase             : MoveComm              = MMUBase;
+  `OISC_MMUOffset           : MoveComm              = MMUOffset;//NOTE Don't calculate full address here in order to get address overflow in MMU.
+  `OISC_MMUWriteData        : MoveComm              = MMUWriteData;
+  `OISC_MMUReadData         : MoveComm              = MMUReadData;
+  `OISC_MMUAccessCtrl       : MoveComm              = MMUAccessCtrl;
 
   `OISC_OBFFOp              : MoveComm              = OBFFOp;
   `OISC_OBFCtrl             : MoveComm              = OBFCtrl;
@@ -87,9 +97,6 @@ always @* begin
   `OISC_ShiftCtrl           : MoveComm              = ShiftCtrl;
   `OISC_ShiftRes            : MoveComm              = ShiftRes;
 
-  `OISC_Hi                  : MoveComm              = Hi;
-  `OISC_Lo                  : MoveComm              = Lo;
-
   `OISC_AddFOp              : MoveComm              = AddFOp;
   `OISC_AddSOp              : MoveComm              = AddSOp;
   `OISC_AddCtrl             : MoveComm              = AddCtrl;
@@ -113,7 +120,16 @@ always @* begin
   `OISC_BootCode,`OISC_PC   : PC                    = MoveComm;
   `OISC_GPRRegExp           : GPR[MoveDst[4:0]]     = /*TODO I've need te read it first*/;
 
+  `OISC_Hi                  : Hi                    = MoveComm;
+  `OISC_Lo                  : Lo                    = MoveComm;
+
   `OISC_Imm                 : Imm                   = MoveComm;//TODO Sign-extend
+
+  `OISC_MMUBase             : MMUBase               = MoveComm;
+  `OISC_MMUOffset           : MMUOffset             = MoveComm;
+  `OISC_MMUWriteData        : MMUWriteData          = MoveComm;//NOTE We can write here value and then rewrite from RAM only part of it or vise versa.
+  `OISC_MMUReadData         : MMUReadData           = MoveComm;
+  `OISC_MMUAccessCtrl       : MMUAccessCtrl         = MoveComm;
 
   `OISC_OBFFOp              : OBFFOp                = MoveComm;
   `OISC_OBFCtrl             : OBFCtrl               = MoveComm;
@@ -147,9 +163,6 @@ always @* begin
   `OISC_ShiftCtrl           : ShiftCtrl             = MoveComm;
   `OISC_ShiftRes            : ShiftRes              = MoveComm;
 
-  `OISC_Hi                  : Hi                    = MoveComm;
-  `OISC_Lo                  : Lo                    = MoveComm;
-
   `OISC_AddFOp              : AddFOp                = MoveComm;
   `OISC_AddSOp              : AddSOp                = MoveComm;
   `OISC_AddCtrl             : AddCtrl               = MoveComm;
@@ -173,7 +186,7 @@ always @(posedge CLK) begin
 end
 
 wire                          OBFBitNum             = OBFCtrl;
-always @(posedge CLK)         OBFRes               <= {`GeneralPurposeRegWidth{OBFFOp[OBFBitNum]}};// Fill with one bit
+always @(posedge CLK)         OBFRes               <= {`GPRWidth{OBFFOp[OBFBitNum]}};// Fill with one bit
 /*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------AND,OR,XOR,NOR*/
 always @(posedge CLK) begin
                               AndRes               <=   AndFOp  & AndSOp;
@@ -183,12 +196,12 @@ always @(posedge CLK) begin
 end
 /*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------SLT*/
 wire                          SLTSigned             = SLTCtrl[0];
-wire                          SLTSignsXOr           = SLTFOp[`GeneralPurposeRegWidth-1]   ^ SLTSOp[`GeneralPurposeRegWidth-1];
-wire                          SLTExceptSigns        = SLTFOp[`GeneralPurposeRegWidth-2:0] < SLTSOp[`GeneralPurposeRegWidth-2:0];
-wire                          SLTResComb            = SLTSigned   &  SLTFOp[`GeneralPurposeRegWidth-1] & !SLTSOp[`GeneralPurposeRegWidth-1] ||
-                                                     !SLTSigned   & !SLTFOp[`GeneralPurposeRegWidth-1] &  SLTSOp[`GeneralPurposeRegWidth-1] ||
+wire                          SLTSignsXOr           = SLTFOp[`GPRWidth-1]   ^ SLTSOp[`GPRWidth-1];
+wire                          SLTExceptSigns        = SLTFOp[`GPRWidth-2:0] < SLTSOp[`GPRWidth-2:0];
+wire                          SLTResComb            = SLTSigned   &  SLTFOp[`GPRWidth-1] & !SLTSOp[`GPRWidth-1] ||
+                                                     !SLTSigned   & !SLTFOp[`GPRWidth-1] &  SLTSOp[`GPRWidth-1] ||
                                                      ~SLTSignsXOr &  SLTTemp;
-always @(posedge CLK)         SLTRes               <= {{`GeneralPurposeRegWidth-1{1'b0}},SLTResComb};// Extend with zeros.
+always @(posedge CLK)         SLTRes               <= {{`GPRWidth-1{1'b0}},SLTResComb};// Extend with zeros.
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------SHIFT*/
 wire                          ShiftArith            = ShiftCtrl[0];//Arithmetic shift
 wire                          Shift2Left            = ShiftCtrl[1];//Shift to the left
@@ -199,19 +212,19 @@ wire                          AddWithOV             = AddCtrl[0];//Enable OVerfl
 wire                          Add2sComplement       = AddCtrl[1];//Convert second operand to 2's complement.
 assign                        AddSOp2sComp          = Add2sComplement ? ~AddSOp : AddSOp;
 assign                       {AddCarry,AddComb}     = Add2sComplement ? (AddFOp + AddSOp2sComp + 1) : AddFOp + AddSOp;//TODO Two additions
-wire                          AddOVFlag             = AddWithOV & AddFOp[`GeneralPurposeRegWidth-1] & AddSOp[`GeneralPurposeRegWidth-1] & AddComb[`GeneralPurposeRegWidth-1] & ;
+wire                          AddOVFlag             = AddWithOV & AddFOp[`GPRWidth-1] & AddSOp[`GPRWidth-1] & AddComb[`GPRWidth-1] & ;
 always @(posedge CLK)        {AddOV,AddRes}        <= AddOVFlag ? {1'b1,AddFOp} : {1'b0,AddComb};/* If OV flags is enabled and there is overflow, then do not alter accumulator.*/
 /*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------MULT*/
 wire                          MultSigned            = MultCtrl[0];
-wire                          MultComb              = MultFOp[`GeneralPurposeRegWidth-1:0] * MultSOp[`GeneralPurposeRegWidth-1:0];//TODO Merge two mutipliers.
-wire                          MultCombSigned        = MultFOp[`GeneralPurposeRegWidth-2:0] * MultSOp[`GeneralPurposeRegWidth-2:0];
+wire                          MultComb              = MultFOp[`GPRWidth-1:0] * MultSOp[`GPRWidth-1:0];//TODO Merge two mutipliers.
+wire                          MultCombSigned        = MultFOp[`GPRWidth-2:0] * MultSOp[`GPRWidth-2:0];
 always @(posedge CLK)        {MultResHi,MultResLo} <= MultSigned ? {MultSign,1'b0,MultCombSigned} : MultComb;
 /*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------DIV*/
 wire                          DivSigned             = DivCtrl[0];
-wire                          DivSign               = DivFOp[`GeneralPurposeRegWidth-1  ] ^ DivSOp[`GeneralPurposeRegWidth-1  ];
-wire                          DivComb               = DivFOp[`GeneralPurposeRegWidth-1:0] / DivSOp[`GeneralPurposeRegWidth-1:0];//TODO Merge two mutipliers.
-wire                          DivCombSigned         = DivFOp[`GeneralPurposeRegWidth-2:0] / DivSOp[`GeneralPurposeRegWidth-2:0];
-wire                          DivRemainder          = DivFOp[`GeneralPurposeRegWidth-1:0] % DivSOp[`GeneralPurposeRegWidth-1:0];
+wire                          DivSign               = DivFOp[`GPRWidth-1  ] ^ DivSOp[`GPRWidth-1  ];
+wire                          DivComb               = DivFOp[`GPRWidth-1:0] / DivSOp[`GPRWidth-1:0];//TODO Merge two mutipliers.
+wire                          DivCombSigned         = DivFOp[`GPRWidth-2:0] / DivSOp[`GPRWidth-2:0];
+wire                          DivRemainder          = DivFOp[`GPRWidth-1:0] % DivSOp[`GPRWidth-1:0];
 always @(posedge CLK)         DivResLo             <= DivSigned ? {DivSign,1'b0,DivCombSigned} : DivComb;
 always @(posedge CLK)         DivResHi             <= DivRemainder;
 
